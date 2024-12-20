@@ -1,36 +1,34 @@
-const int intPin = 17;
-const int ledPin = 45;
-int buttonState = 0;
+struct Button {
+    const uint8_t PIN;
+    uint32_t numberKeyPresses;
+    bool pressed;
+};
 
+Button button1 = {17, 0, false};
+
+//variables to keep track of the timing of recent interrupts
 unsigned long button_time = 0;  
 unsigned long last_button_time = 0; 
 
-void IRAM_ATTR ISR() {
+void IRAM_ATTR isr() {
     button_time = millis();
-    if (button_time - last_button_time > 250)
-    {
-    digitalWrite(ledPin, HIGH);
-    delay(1000);
-    digitalWrite(ledPin, LOW);
-    last_button_time = button_time;
+if (button_time - last_button_time > 250)
+{
+        button1.numberKeyPresses++;
+        button1.pressed = true;
+       last_button_time = button_time;
 }
 }
 
 void setup() {
-  Serial.begin(115200);
-  // put your setup code here, to run once:
-  attachInterrupt(intPin, ISR, FALLING);
-  pinMode(ledPin, OUTPUT);
-  pinMode(intPin, INPUT);
-  digitalWrite(ledPin, HIGH);
-  delay(500);
-  digitalWrite(ledPin, LOW);
-
+    Serial.begin(115200);
+    pinMode(button1.PIN, INPUT_PULLUP);
+    attachInterrupt(button1.PIN, isr, FALLING);
 }
 
 void loop() {
-  buttonState = digitalRead(intPin);
-  // put your main code here, to run repeatedly:
-  Serial.println(buttonState);
+    if (button1.pressed) {
+        Serial.printf("Button has been pressed %u times\n", button1.numberKeyPresses);
+        button1.pressed = false;
+    }
 }
-
